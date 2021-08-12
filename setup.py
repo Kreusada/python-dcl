@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fp:
 
 setup(
     name="dcl",
-    version="0.0.1",
+    version="0.0.2",
     author="Kreusada",
     author_email="kreusadaprojects@gmail.com",
     description="Python library used for diacritic manipulation.",
