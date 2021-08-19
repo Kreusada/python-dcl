@@ -26,10 +26,15 @@ We can use these functions directly from the dcl object to convert a single stri
 into the given letter with the appropriate diacritic.
 """
 
+from typing import (
+    Dict as _Dict, 
+    List as _List,
+    Iterable as _Iterable
+)
+
+from ._maps import _diacritic_map, _diacritic_cleaner_map
 from .errors import *
 from .objects import *
-from ._maps import _diacritic_map, _diacritic_cleaner_map
-from typing import Dict as _Dict, List as _List, Iterable as _Iterable
 
 __version__ = "1.0.0"
 
