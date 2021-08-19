@@ -1,4 +1,4 @@
-from ._maps import _diacritic_map, _diacritic_char_map
+from . import _diacritic_map, _diacritic_char_map
 from .errors import DiacriticError
 
 __all__ = ("DiacriticApplicant", "Character")
