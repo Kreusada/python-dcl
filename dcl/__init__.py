@@ -30,7 +30,7 @@ from .errors import *
 from .objects import *
 from typing import Dict as _Dict, List as _List, Iterable as _Iterable
 
-__version__ = "0.0.2"
+__version__ = "1.0.0"
 
 _diacritic_map = {
     "grave": {
@@ -181,9 +181,12 @@ _diacritic_map = {
 
 # Supporting aliases
 
+_update_dict = {}
 for k, v in _diacritic_map.items():
     if "umlaut" in k:
         _diacritic_map[k.replace("umlaut", "diaresis")] = v
+        _update_dict[k.replace("umlaut", "diaresis")] = v
+_diacritic_map.update(_update_dict)
 
 _diacritic_cleaner_map = {}
 for val in _diacritic_map.values():
