@@ -179,6 +179,12 @@ _diacritic_map = {
     }
 }
 
+# Supporting aliases
+
+for k, v in _diacritic_map.items():
+    if "umlaut" in k:
+        _diacritic_map[k.replace("umlaut", "diaresis")] = v
+
 _diacritic_cleaner_map = {}
 for val in _diacritic_map.values():
     _diacritic_cleaner_map.update({v: k for k, v in val.items()})
@@ -919,4 +925,4 @@ def cantakelist(diacritic: str) -> _List[str]:
     """
     if not isdiacritictype(diacritic):
         raise ValueError(f"'{diacritic}' is not a valid diacritic")
-    return list(map(str.lower, _diacritic_map[diacritic].keys())
+    return list(map(str.lower, _diacritic_map[diacritic].keys()))
