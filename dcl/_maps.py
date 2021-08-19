@@ -58,6 +58,15 @@ _diacritic_map = {
         "W": "\u1e84", 
         "Y": "\u0178"
     }, 
+    "diaresis": {
+        "A": "\u00c4", 
+        "E": "\u00cb", 
+        "I": "\u00cf", 
+        "O": "\u00d6", 
+        "U": "\u00dc", 
+        "W": "\u1e84", 
+        "Y": "\u0178"
+    }, 
     "ring": {
         "A": "\u00c5", 
         "U": "\u016e"
@@ -135,6 +144,9 @@ _diacritic_map = {
         "L": "\u013f"
     }, 
     "umlaut_and_macron": {
+        "A": "\u01de"
+    }, 
+    "diaresis_and_macron": {
         "A": "\u01de"
     }, 
     "ring_and_acute": {
