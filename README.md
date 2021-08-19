@@ -67,6 +67,8 @@ char.raw_diacritic
 >>> '\U000002db'
 ```
 
+### Dealing with exceptions
+
 Some functions can't take certain letters. For example, the letter ``h`` cannot take
 a cedilla diacritic. In this case, an exception is raised named ``DiacriticError``.
 You can access this exception via ``dcl.errors.DiacriticError``.
@@ -84,6 +86,8 @@ else:
 >>> 'Character h cannot take a cedilla diacritic'
 ```
 
+### Using diacritic objects
+
 If you want to, you may also use the ``DiacriticApplicant`` object from 
 ``dcl.objects``. The functions you see above use this object too, and it's virtually
 the same principle, except from the fact that we use properties to get the 
@@ -98,8 +102,13 @@ repr(da.ogonek)
 >>> "<ogonek 'ą'>"
 ```
 
-There is also the ``clean_diacritics`` function, accessible straight from the dcl module.
-This function allows us to completely clean a string from any diacritics.
+### Diacritic Tools
+
+There are various tools which can remove, count, check for, and get all given diacritics from
+a string.
+
+The ``clean_diacritics`` function, accessible straight from the dcl module, allows us to completely 
+clean a string from any diacritics.
 
 ```py
 dcl.clean_diacritics("Krëûšàdå")
@@ -109,7 +118,7 @@ dcl.clean_diacritics("Café")
 >>> 'Cafe'
 ```
 
-Along with this function, there's also ``count_diacritics``, ``get_diacritics`` and ``has_diacritics``.
+Along with this function, there's also  ``has_diacritics``, ``get_diacritics``, and ``count_diacritics``.
 
 The ``has_diacritics`` function simply checks if the string contains a character
 with a diacritic.
@@ -143,6 +152,55 @@ dcl.count_diacritics("Café")
 >>> 1
 ```
 
+### Cantake functions
+
+In version 1, various new functions were added. Firstly, there is the ``cantake()`` function.
+This defines whether the letter(s) in a string can take a given diacritic.
+
+```py
+dcl.cantake('a', 'ogonek')
+>>> True
+dcl.cantake('f', 'ring')
+>>> False
+```
+
+This function checks every letter, so you can provide more than one letter! It will return
+based on whether **all** letters in the string can take the specific diacritic.
+
+It is better practice to use the ``cantake()`` function instead of try/except blocks with the base
+functions, such as like this:
+
+```py
+# Don't do this!
+try:
+    dcl.slash('a')
+except DiacriticError:
+    return False
+else:
+    return True
+
+# Do this instead:
+dcl.cantake('a', 'slash')
+```
+
+The word "clock" is a great example. Every letter in this word can take an acute diacritic, therefore
+this function returns True. This function is probably more useful for checking single characters, though.
+You use it how you want!
+
+```py
+dcl.cantake('clock', 'acute')
+>>> True
+```
+
+What's more, you can even check what letters an accent takes by using the ``cantakelist()`` function.
+
+```py
+dcl.cantakelist('caron')
+>>> ['c', 'd', 'e', 'g', 'k', 'l', 'n', 'r', 's', 't', 'z']
+```
+
+Side note: Is it just me who keeps reading "cantake" as "pancake"? Smh...
+
 ### Creating an end user program
 
 Creating a program would be pretty simple for this, and I'd love to be able to help
@@ -154,21 +212,22 @@ import string
 
 from dcl.errors import DiacriticError
 
-char = str(input("Enter a character: "))
-if not char in string.ascii_letters:
-    print("Please enter a letter from a-Z.")
-else:
+def main():
+    char = str(input("Enter a character: "))
+    if not char in string.ascii_letters:
+        print("Please enter a letter from a-Z.")
+        return
     accent = str(input("Enter an accent, you can choose from the following: " + ", ".join(dcl.diacritic_list)))
     if not dcl.isdiacritictype(accent):
         print("That was not a valid accent.")
+        return
+    try:
+        function = getattr(dcl, accent)  # or dcl.objects.DiacriticApplicant
+        output = function(char)
+    except DiacriticError as e:
+        print(e)
     else:
-        try:
-            function = getattr(dcl, accent)  # or dcl.objects.DiacriticApplicant
-            output = function(char)
-        except DiacriticError as e:
-            print(e)
-        else:
-            print(str(output))
+        print(str(output))
 ```
 
 It's worth checking if the provided accent is a diacritic type. If it is, then you can use ``getattr``. 
