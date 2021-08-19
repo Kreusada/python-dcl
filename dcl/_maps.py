@@ -58,6 +58,15 @@ _diacritic_map = {
         "W": "\u1e84", 
         "Y": "\u0178"
     }, 
+    "diaresis": {
+        "A": "\u00c4", 
+        "E": "\u00cb", 
+        "I": "\u00cf", 
+        "O": "\u00d6", 
+        "U": "\u00dc", 
+        "W": "\u1e84", 
+        "Y": "\u0178"
+    }, 
     "ring": {
         "A": "\u00c5", 
         "U": "\u016e"
@@ -137,6 +146,9 @@ _diacritic_map = {
     "umlaut_and_macron": {
         "A": "\u01de"
     }, 
+    "diaresis_and_macron": {
+        "A": "\u01de"
+    }, 
     "ring_and_acute": {
         "A": "\u01fa"
     }, 
@@ -144,15 +156,6 @@ _diacritic_map = {
         "O": "\u01fe"
     }
 }
-
-# Supporting aliases
-
-_update_dict = {}
-for k, v in _diacritic_map.items():
-    if "umlaut" in k:
-        _diacritic_map[k.replace("umlaut", "diaresis")] = v
-        _update_dict[k.replace("umlaut", "diaresis")] = v
-_diacritic_map.update(_update_dict)
 
 _diacritic_cleaner_map = {}
 for val in _diacritic_map.values():
