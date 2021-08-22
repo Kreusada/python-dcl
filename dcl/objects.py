@@ -21,6 +21,12 @@ class Character:
     def __str__(self):
         return self.character
 
+    def lower(self):
+        return self.character.lower()
+
+    def upper(self):
+        return self.character.upper()
+
 class DiacriticApplicant(object):
     """An object used for applying diacritics to letters.
     
