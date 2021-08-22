@@ -36,7 +36,7 @@ from ._maps import _diacritic_map, _diacritic_cleaner_map
 from .errors import *
 from .objects import *
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 diacritic_list = [
