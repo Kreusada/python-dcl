@@ -18,7 +18,7 @@ The DCL library supports the following diacritic marks (note: not all examples m
 | Bar                    |            4 | Ꞓ         | dcl.BAR                    |
 | Belt                   |            2 | Ɬ         | dcl.BELT                   |
 | Breve                  |           12 | Ă         | dcl.BREVE                  |
-| Brevebelow             |            2 | Ḫ         | dcl.BREVEBELOW             |
+| Breve Below             |            2 | Ḫ         | dcl.BREVEBELOW             |
 | Caron                  |           32 | Ǎ         | dcl.CARON                  |
 | Cedilla                |           22 | Ç         | dcl.CEDILLA                |
 | Circumflex             |           26 | Â         | dcl.CIRCUMFLEX             |
