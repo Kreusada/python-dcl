@@ -3,12 +3,15 @@ python-dcl is a Python library for working with diacritics in multilingual Latin
 It provides functionality for adding, removing, modifying and processing diacritic marks, 
 supporting functions for orthographic and linguistic analysis.
 """
-
 from __future__ import annotations
+
+import random
+
 from enum import Flag, auto, global_enum
-from typing import overload
+from typing import overload, Iterable, Literal
 
 __version__ = "2.0.0"
+
 
 @global_enum
 class Diacritic(Flag):
@@ -416,19 +419,20 @@ for val in _diacritic_map.values():
     _diacritic_cleaner_map.update({v.lower(): k.lower() for k, v in val.items()})
 
 
-def apply(character: str, /, diacritic: Diacritic) -> str:
-    """Apply a given diacritic to a character."""
-    if len(character) != 1:
-        raise ValueError("Can only apply a diacritic for one-length strings.")
+def apply(string: str, /, diacritic: Diacritic) -> str:
+    """Apply a given diacritic to each character in the given string."""
+    ret = ""
     if diacritic not in _diacritic_map:
         raise ValueError("Invalid diacritic or combination of diacritics")
     index = _diacritic_map[diacritic]
-    if character.upper() not in index:
-        raise ValueError(
-            f"Character {character!r} is not applicable for the {diacritic.name} diacritic"
-        )
-    func = str.lower if character.islower() else str.upper
-    return func(index[character.upper()])
+    for char in string:
+        if char.upper() not in index:
+            raise ValueError(
+                f"Character {char!r} is not applicable for the {diacritic.name} diacritic"
+            )
+        func = str.lower if char.islower() else str.upper
+        ret += func(index[char.upper()])
+    return ret
 
 
 def identify(string: str, /) -> Diacritic | None:
@@ -444,33 +448,36 @@ def identifyall(string: str, /) -> dict[int, Diacritic | None]:
     return {idx: identify(char) for idx, char in enumerate(string)}
 
 
-def contains(string: str, /, diacritic: Diacritic | None = None) -> bool:
+def contains(string: str, /, diacritic: Diacritic | Literal["any"] = "any") -> bool:
     """Check if a string contains particular, or any diacritics."""
-    values = identify(string).values()
-    if diacritic is None:
+    values = identifyall(string).values()
+    if diacritic == "any":
         return any(values)
     return diacritic in values
 
 
-def find(string: str, /, diacritic: Diacritic) -> list[int]:
-    """Find where a string has a certain diacritic."""
-    return [idx for idx, dia in identifyall(string).items() if diacritic is dia]
+def find(string: str, /, diacritic: Diacritic | Literal["any"] = "any") -> list[int]:
+    """Find where a string has a particular, or any diacritic."""
+    identified_diacritics = identifyall(string).items()
+
+    if diacritic == "any":
+        return [idx for idx, dia in identified_diacritics if dia is not None]
+    return [idx for idx, dia in identified_diacritics if diacritic is dia]
 
 
-def remove(string: str, /, diacritic: Diacritic) -> str:
-    """Remove a given diacritic from a string."""
+def normalize(string: str, /, diacritic: Diacritic | Literal["any"] = "any") -> str:
+    """Remove a given diacritic, or any diacritics, from a string."""
+    if diacritic == "any":
+        return "".join(
+            _diacritic_cleaner_map.get(char, char)
+            if identify(char) is not None
+            else char
+            for char in string
+        )
     return "".join(
         _diacritic_cleaner_map.get(char, char) if identify(char) is diacritic else char
         for char in string
     )
-
-
-def normalize(string: str, /) -> str:
-    """Remove all diacritics from a string."""
-    return "".join(_diacritic_cleaner_map.get(char, char) for char in string)
-
-
-normalise = normalize
 
 
 @overload
@@ -483,7 +490,7 @@ def applicable(diacritic: Diacritic, /) -> list[str]:
     ...
 
 
-def applicable(diacritic_or_character: str, /) -> list[Diacritic]:
+def applicable(diacritic_or_character: Diacritic | str, /) -> list[str | Diacritic]:
     """Get diacritics for character or character for diacritics."""
     if isinstance(diacritic_or_character, str):
         return [
@@ -496,44 +503,58 @@ def applicable(diacritic_or_character: str, /) -> list[Diacritic]:
         return ret + list(map(str.lower, ret))
 
 
-def substitute(string: str, /, old: Diacritic | None, new: Diacritic | None) -> str:
-    """Substitute diacritics with a different diacritic."""
+def substitute(
+    string: str,
+    /,
+    *,
+    old_diacritic: Diacritic | Literal["any"] | None,
+    new_diacritic: Diacritic | None,
+    focus_characters: str | Iterable[str] = "",
+) -> str:
+    """Substitute characters in a string containing (or not containing) diacritics."""
     ret = ""
 
     for char in string:
-        diacritic = identify(char)
-        if new is None:
-            ret += normalize(char)
-        else:
-            ret += apply(normalize(char), d=new) if diacritic is old else char
+        char_diacritic = identify(char)
+        norm_char = normalize(char)
 
-    return ret
+        should_focus = norm_char in focus_characters
 
-
-def replace(string: str, /, character: str, diacritic: Diacritic) -> str:
-    """Replace characters with their diacritic version."""
-    ret = ""
-
-    for char in string:
-        if char == character:
-            func = str.lower if character.islower() else str.upper
-            ret += func(apply(char, diacritic))
+        if should_focus and (
+            char_diacritic is old_diacritic
+            or old_diacritic == "any"
+            and char_diacritic is not None
+        ):
+            ret += (
+                apply(norm_char, new_diacritic)
+                if new_diacritic is not None
+                else norm_char
+            )
         else:
             ret += char
 
     return ret
 
 
-def count(string: str, /, diacritic: Diacritic) -> int:
+def count(string: str, /, diacritic: Diacritic | Literal["any"] = "any") -> int:
     """Count the occurances of a diacritic within a string."""
-    return sum(1 for d in identifyall(string).values() if diacritic is d)
+    identified_diacritics = identifyall(string).values()
+
+    if diacritic == "any":
+        return sum(1 for d in identified_diacritics if d is not None)
+    return sum(1 for d in identified_diacritics if diacritic is d)
+
+
+# Aliases
+normalise = normalize
+replace = substitute
 
 
 class DiacriticTransformer(str):
     """An object that employs all of dcl's major functions."""
 
-    def apply_diacritic(self, diacritic: Diacritic) -> DiacriticTransformer:
-        """Apply a diacritic. This will only work for one-length strings."""
+    def apply_diacritics(self, diacritic: Diacritic) -> DiacriticTransformer:
+        """Apply a given diacritic to each character in the given string."""
         return DiacriticTransformer(apply(self, diacritic))
 
     def identify_diacritic(self) -> Diacritic | None:
@@ -544,48 +565,45 @@ class DiacriticTransformer(str):
         """Identify all the diacritics applied to this string."""
         return identifyall(self)
 
-    def contains_diacritic(self, diacritic: Diacritic | None = None) -> bool:
+    def contains_diacritic(self, diacritic: Diacritic | Literal["any"] = "any") -> bool:
         """Check if the string contains particular, or any diacritic."""
         return contains(self, diacritic)
 
     def find_diacritic(self, diacritic: Diacritic) -> list[int]:
-        """Find where the string has a certain diacritic."""
+        """Find where the string has a particular, or any diacritic."""
         return find(self, diacritic)
 
-    def remove_diacritic(self, diacritic: Diacritic) -> DiacriticTransformer:
-        """Remove a given diacritic from the string."""
-        return DiacriticTransformer(remove(self, diacritic))
-
-    def normalize_diacritics(self) -> DiacriticTransformer:
-        """Remove all diacritics from the string."""
-        return DiacriticTransformer(normalize(self))
+    def normalize_diacritics(
+        self, diacritic: Diacritic | Literal["any"] = "any"
+    ) -> DiacriticTransformer:
+        """Remove a given diacritic, or any diacritics, from a string."""
+        return DiacriticTransformer(normalize(self, diacritic))
 
     normalise_diacritics = normalize_diacritics
 
-    @overload
-    def applicable(self, character: str, /) -> list[Diacritic]:
-        ...
-
-    @overload
-    def applicable(self, diacritic: Diacritic, /) -> list[str]:
-        ...
-
-    def applicable(self) -> list[Diacritic]:
+    def applicable_diacritics(self) -> list[Diacritic]:
         """Get a list of diacritics applicable. This will only work for one-length strings."""
         return applicable(self)
 
-    def substitute_diacritics(
-        self, old: Diacritic | None, new: Diacritic | None
-    ) -> DiacriticTransformer:
-        """Substitute diacritics with a different diacritic."""
-        return DiacriticTransformer(substitute(self, old, new))
-
-    def replace_diacritics(
-        self, character: str, diacritic: Diacritic
-    ) -> DiacriticTransformer:
-        """Replace characters with their diacritic version."""
-        return DiacriticTransformer(replace(self, character, diacritic))
-
-    def count_diacritics(self, diacritic: Diacritic) -> int:
+    def count_diacritic(self, diacritic: Diacritic | Literal["any"] = "any") -> int:
         """Count the occurances of a diacritic."""
         return count(self, diacritic)
+
+    def substitute_diacritics(
+        self,
+        string: str,
+        /,
+        *,
+        old_diacritic: Diacritic | Literal["any"] | None,
+        new_diacritic: Diacritic | None,
+        focus_characters: str | Iterable[str] = "",
+    ) -> DiacriticTransformer:
+        """Substitutes characters in a string containing (or not containing) diacritics."""
+        return DiacriticTransformer(
+            substitute(
+                string,
+                old_diacritic=old_diacritic,
+                new_diacritic=new_diacritic,
+                focus_characters=focus_characters,
+            )
+        )
